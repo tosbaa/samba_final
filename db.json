@@ -1,0 +1,1 @@
+{"name":"samba","publisher":"Administrator","version":"0.0.1","database":[],"widgets":[],"views":[{"name":"index","scripts":"get_samba_index"},{"scripts":"shared_users","name":"details"}],"status":0,"service":"smbd","support":"administrator@liman.app","icon":"server"}
