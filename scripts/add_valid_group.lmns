@@ -51,6 +51,13 @@ def group_exist(section_name, group_name):
     except configparser.NoOptionError:
         return False
 
+def group_exist_in_system(group_name):
+
+    bash_command = "getent group | grep -c '^{:s}:'".format(group_name)
+    group_exist = subprocess.run(bash_command, shell=True, stdout=subprocess.PIPE).stdout
+
+    return True if group_exist.decode("utf-8") == 1 else False
+
 
 def add_option(section_name, option_name, value):
     sed_script = r"sed -i '/\[{:s}\]/a {:s} \= @{:s}' {:s}".format(
@@ -65,6 +72,10 @@ def before():
     if group_exist(SECTION_NAME, GROUP_NAME):
         print("Group : '{:s}' already in valid groups".format(GROUP_NAME))
         exit()
+    if not group_exist_in_system(GROUP_NAME):
+        print("Group : '{:s}' does not exist".format(GROUP_NAME))
+        exit()
+
     print("ok")
 
 

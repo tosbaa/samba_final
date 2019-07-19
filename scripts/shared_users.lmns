@@ -133,7 +133,7 @@ def parse_acl(acl_string):
         group_list[group] = match_group_valid
     acl_dict["groups"] = group_list
 
-    for role in ["user", "group", "other"]:
+    """ for role in ["user", "group", "other"]:
         default_permissions = re.search("default:%s::(.*)" % role, acl_string)
         if default_permissions is not None:
             acl_dict["default_%s" % role] = default_permissions.group(1)
@@ -164,7 +164,7 @@ def parse_acl(acl_string):
             default_groups_list.append(
                 {default_group: default_group_permission.group(1)})
     if default_groups:
-        acl_dict["default_groups"] = default_groups_list
+        acl_dict["default_groups"] = default_groups_list """
     return acl_dict
 
 

@@ -49,8 +49,18 @@ def user_exist(section_name, user_name):
         already_defined_users = [user.strip() for user in get_option_value(
             section_name, "valid users").split(" ")]
         return user_name in already_defined_users
+
     except configparser.NoOptionError:
         return False
+
+def user_exist_in_system(user_name):
+    """Check username in etc/passwd"""
+    bash_command = "getent passwd | grep -c '^{:s}:'".format(user_name)
+    user_exist = subprocess.run(bash_command, shell=True, stdout=subprocess.PIPE).stdout
+    
+    return True if user_exist.decode("utf-8") == 1 else False
+    
+
 
 
 def add_option(section_name, option_name, value):
@@ -65,6 +75,10 @@ def before():
         exit()
     if user_exist(SECTION_NAME, USER_NAME):
         print("User : '{:s}' already in valid users".format(USER_NAME))
+        exit()
+
+    if not user_exist_in_system(USER_NAME):
+        print("User : '{:s}' does not exist".format(USER_NAME))
         exit()
     print("ok")
 

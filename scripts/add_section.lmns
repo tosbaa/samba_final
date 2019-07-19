@@ -63,6 +63,9 @@ def add_section(section_name, file_path):
 
 
 def before():
+    if SECTION_NAME.isspace():
+        print("Section name must have letters")
+        exit()
     if section_exist(SECTION_NAME):
         print('Section name : {:s} already exist'.format(SECTION_NAME))
         exit()

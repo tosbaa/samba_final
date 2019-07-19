@@ -61,7 +61,6 @@
             "icon" => "fa-edit"
         ],
     ],
-    "noInitialize" => true
 ])
 </div>
 
@@ -85,13 +84,13 @@
             "icon" => "fa-edit"
         ],
     ],
-    "noInitialize" => true
 ])
 </div>
 </div>
 
 @include('tree', [
-    "data" => $data["shared_users"]["file_tree"]
+    "data" => $data["shared_users"]["file_tree"],
+    "click" => "getAclInfo",
 ])
 
 
@@ -177,6 +176,27 @@
 
 ])
 
+@include('modal', [
+    "id" => "aclInfo",
+    "title" => "ACL Bilgisi",
+    "url" => API('setFileAcl'),
+    "next" => "reload",
+    "inputs" => [
+        "User read" => "r_user:checkbox",
+        "User write" => "w_user:checkbox",
+        "User execute" => "x_user:checkbox",
+        "Group read" => "r_group:checkbox",
+        "Group write" => "w_group:checkbox",
+        "Group execute" => "x_group:checkbox",
+        "Others read" => "r_others:checkbox",
+        "Others write" => "w_others:checkbox",
+        "Others execute" => "x_others:checkbox",
+        "Dosya:" .request("file_path") => "file_path:hidden",
+    ],
+    "submit_text" => "Kaydet"
+    
+])
+
 
 <script>
     function aclUserShow(line) {
@@ -186,15 +206,20 @@
         if (permissions.length === 0) {
             $("input:checkbox").attr("checked", false);
         }
-        for (var i = 0; i < permissions.length; i++) {
-            if (permissions[i] !== '-') {
-                permission = "'" + permissions[i] + "'";
-                var checkboxName = '#editUserAcl [name=' + permission + ']';
+
+        permissions_pool = ['r', 'w', 'x'];
+
+        for (var i = 0; i < permissions_pool.length; i++) {
+            permission = permissions_pool[i];
+
+            if (permissions.includes(permission)) {
+                permission_string = "'" + permission + "'";
+                checkboxName = '#editUserAcl [name=' + permission_string + ']';
                 $(checkboxName).attr('checked', true);
             }
             else {
-                permission = "'" + permissions[i] + "'";
-                var checkboxName = '#editUserAcl [name=' + permission + ']';
+                permission_string = "'" + permission + "'";
+                checkboxName = '#editUserAcl [name=' + permission_string + ']';
                 $(checkboxName).attr('checked', false);
             }
         }
@@ -208,19 +233,97 @@
         if (permissions.length === 0) {
             $("input:checkbox").attr("checked", false);
         }
-        for (var i = 0; i < permissions.length; i++) {
-            if (permissions[i] !== '-') {
-                permission = "'" + permissions[i] + "'";
-                var checkboxName = '#editGroupAcl [name=' + permission + ']';
+
+        permissions_pool = ['r', 'w', 'x'];
+
+        for (var i = 0; i < permissions_pool.length; i++) {
+            var permission = permissions_pool[i];
+
+            if (permissions.includes(permission)) {
+                permission_string = "'" + permission + "'";
+                var checkboxName = '#editGroupAcl [name=' + permission_string + ']';
                 $(checkboxName).attr('checked', true);
             }
+            
             else {
-                permission = "'" + permissions[i] + "'";
-                var checkboxName = '#editGroupAcl [name=' + permission + ']';
+                permission_string = "'" + permissions + "'";
+                var checkboxName = '#editGroupAcl [name=' + permission_string + ']';
                 $(checkboxName).attr('checked', false);
             }
         }
         $('#editGroupAcl').modal('show');
+    }
+
+    function getAclInfo(file_path) {
+        var path_splitted = (file_path + "").split(",");
+        path_splitted.shift();
+        path_splitted = path_splitted.join('/');
+        var query_file_path = location.search.split('file_path=')[1];
+        var full_path = query_file_path + '/' + path_splitted;
+
+        $("#aclInfo [name='file_path']").attr("value", full_path);
+
+
+        var form = new FormData();
+        form.append('file_path', full_path);
+        request('{{API('get_acl')}}', form, function(response) {
+            var json = JSON.parse(response);
+            var message_json = JSON.parse(json["message"]);
+            
+            var other_permission = message_json["other_permission"][0].split("");
+            var user_permission = message_json["user_permission"][0].split("");
+            var group_permission = message_json["group_permission"][0].split("");
+
+
+            var default_permissions = ['r', 'w', 'x'];
+
+            for (var i = 0; i < default_permissions.length; i++) {
+                if (user_permission.includes(default_permissions[i])) {
+                    permission_string = default_permissions[i];
+                    var checkboxName = '#aclInfo [name=' + permission_string + '_user' + ']';
+                    $(checkboxName).attr('checked', true);
+                }
+                
+                else {
+                    permission_string = default_permission[i];
+                    var checkboxName = '#aclInfo [name=' + permission_string + '_user' + ']';
+                    $(checkboxName).attr('checked', true);
+                }
+            }
+            
+            for (var i = 0; i < default_permissions.length; i++) {
+                if (group_permission.includes(default_permissions[i])) {
+                    permission_string = default_permissions[i];
+                    var checkboxName = '#aclInfo [name=' + permission_string + '_group' + ']';
+                    $(checkboxName).attr('checked', true);
+                }
+                
+                else {
+                    permission_string = default_permission[i];
+                    var checkboxName = '#aclInfo [name=' + permission_string + '_group' + ']';
+                    $(checkboxName).attr('checked', true);
+                }
+            }
+
+            for (var i = 0; i < default_permissions.length; i++) {
+                if (other_permission.includes(default_permissions[i])) {
+                    permission_string =  default_permissions[i];
+                    var checkboxName = '#aclInfo [name=' + permission_string + '_others' + ']';
+                    $(checkboxName).attr('checked', true);
+                }
+                
+                else {
+                    permission_string = default_permissions[i];
+                    var checkboxName = '#aclInfo [name=' + permission_string + '_others' + ']';
+                    $(checkboxName).attr('checked', true);
+                }
+            }
+
+            $('#aclInfo').modal('show');
+            
+        })
+        
+
     }
 
 </script>
